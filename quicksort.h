@@ -1,6 +1,9 @@
 #include <algorithm>
 
 #include "parallel.h"
+#include "get_time.h"
+
+# define GRAIN_SIZE 1000
 
 using namespace parlay;
 
@@ -14,26 +17,40 @@ void scan_down(T *A, T *B, T *lsum, size_t n, T offset){
 	if(n == 1){
 		B[0] = offset + A[0];
 		return;
-	}
-	size_t m = n/2;
-	auto f1 = [&]() { scan_down(A, B, lsum, m, offset); };
-	auto f2 = [&]() { scan_down(A+m, B+m, lsum+m, n-m, offset + lsum[m-1]); };
+	} else if(n <= GRAIN_SIZE) {
+		B[0] = offset + A[0];
+		for (size_t i = 1; i < n; ++i)
+			B[i] = B[i - 1] + A[i];
+	} else {
+		size_t m = n/2;
+		auto f1 = [&]() { scan_down(A, B, lsum, m, offset); };
+		auto f2 = [&]() { scan_down(A+m, B+m, lsum+m, n-m, offset + lsum[m-1]); };
 
-	par_do(f1, f2);
+		par_do(f1, f2);
+	}
 }
 
 template <class T>
 T scan_up(T *A, T *lsum, size_t n){
 	if(n == 1)
 		return A[0];
-	size_t m = n/2;
-	T l, r;
-	auto f1 = [&]() { l = scan_up(A, lsum, m); };
-	auto f2 = [&]() { r = scan_up(A + m, lsum + m, n-m); };
+	else if(n <= GRAIN_SIZE){
+		T sum = A[0];
+		for (size_t i = 1; i < n; ++i) {
+			sum += A[i];
+			lsum[i - 1] = sum - A[i];
+		}
+		return sum;
+	} else {
+		size_t m = n/2;
+		T l, r;
+		auto f1 = [&]() { l = scan_up(A, lsum, m); };
+		auto f2 = [&]() { r = scan_up(A + m, lsum + m, n-m); };
 
-	par_do(f1, f2);
-	lsum[m-1] = l;
-	return l + r;
+		par_do(f1, f2);
+		lsum[m-1] = l;
+		return l + r;
+	}
 }
 
 template <class T>
