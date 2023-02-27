@@ -16,19 +16,6 @@ inline uint64_t hashf(uint64_t u){
 }
 
 template <class T>
-void insertion_sort(T* A, size_t n) {
-	for (size_t i = 1; i < n; i++) {
-		T key = A[i];
-		size_t j = i - 1;
-		while (j >= 0 && A[j] > key) {
-			A[j + 1] = A[j];
-			j--;
-		}
-		A[j + 1] = key;
-	}
-}
-
-template <class T>
 void scan_down(T *A, T *B, T *lsum, size_t n, T offset){
 	if(n == 1){
 		B[0] = offset + A[0];
@@ -101,6 +88,9 @@ void filter(T *A, T *B, T *lsum1, T *lsum2, T *flag1, T *flag2, T *ps1, T *ps2, 
 			B[ps1[n-1] + ps3 + ps2[i] - 1] = A[i];
 		else
 			B[ps1[n-1] + ps3 - 1] = A[i];
+	});
+	parallel_for(ps1[n-1], ps1[n-1] + ps3, [&](size_t i){
+		B[i] = a;
 	});
 
 	parallel_for(0, n, [&](size_t i){
