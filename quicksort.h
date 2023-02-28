@@ -3,7 +3,9 @@
 #include "parallel.h"
 #include "get_time.h"
 
-# define GRAIN_SIZE 100000
+#define GRAIN_SIZE_SCAN 100000
+//#define GRAIN_SIZE_SCAN 1
+#define GRAIN_SIZE_SORT 1000000
 
 using namespace parlay;
 
@@ -20,7 +22,7 @@ void scan_down(T *A, T *B, T *lsum, size_t n, T offset){
 	if(n == 1){
 		B[0] = offset + A[0];
 		return;
-	} else if(n <= GRAIN_SIZE) {
+	} else if(n <= GRAIN_SIZE_SCAN) {
 		B[0] = offset + A[0];
 		for (size_t i = 1; i < n; ++i)
 			B[i] = B[i - 1] + A[i];
@@ -37,7 +39,7 @@ template <class T>
 T scan_up(T *A, T *lsum, size_t n){
 	if(n == 1)
 		return A[0];
-	else if(n <= GRAIN_SIZE){
+	else if(n <= GRAIN_SIZE_SCAN){
 		T sum = A[0];
 		for (size_t i = 1; i < n; ++i) {
 			sum += A[i];
@@ -102,7 +104,7 @@ void filter(T *A, T *B, T *lsum1, T *lsum2, T *flag1, T *flag2, T *ps1, T *ps2, 
 template <class T>
 void parallel_quicksort(T *A, T *B, T *lsum1, T *lsum2, T *flag1, T * flag2, T *ps1, T *ps2, size_t n, uint64_t a){
 	size_t p1, p2;
-	if(n <= GRAIN_SIZE){
+	if(n <= GRAIN_SIZE_SORT){
 		std::sort(A, A + n);
 		return;
 	}
