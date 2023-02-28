@@ -88,32 +88,38 @@ void filter(T *A, T *B, T *lsum1, T *lsum2, T *flag1, T *flag2, T *ps1, T *ps2, 
 			B[ps1[i]-1] = A[i];
 		else if(f2(A[i]))
 			B[ps1[n-1] + ps3 + ps2[i] - 1] = A[i];
-		else
-			B[ps1[n-1] + ps3 - 1] = A[i];
 	});
 	parallel_for(ps1[n-1], ps1[n-1] + ps3, [&](size_t i){
 		B[i] = a;
 	});
 
 	parallel_for(0, n, [&](size_t i){
+		//if(i >= (size_t)(ps1[n-1]) && i < (size_t)(ps1[n-1] + ps3))
+			//B[i] = a;
 		A[i] = B[i];
 	});
 	p1 = (size_t)ps1[n-1], p2 = ps3;
 }
 
 template <class T>
-void parallel_quicksort(T *A, T *B, T *lsum1, T *lsum2, T *flag1, T * flag2, T *ps1, T *ps2, size_t n, uint64_t a){
+void parallel_quicksort(T *A, T *B, T *randA, T *lsum1, T *lsum2, T *flag1, T * flag2, T *ps1, T *ps2, size_t n, uint64_t a){
 	size_t p1, p2;
 	if(n <= GRAIN_SIZE_SORT){
 		std::sort(A, A + n);
 		return;
 	}
 
-	size_t pivotIndex = size_t(hashf(a++)%n);
+	for(int i = 0; i < 50; i++)
+		randA[i] = hashf(a++)%n;
+
+	std::sort(randA, randA + 50);
+	size_t pivotIndex = randA[25];
+
+	//size_t pivotIndex = size_t(hashf(a++)%n);
 	filter(B, A, lsum1, lsum2, flag1, flag2, ps1, ps2, n, B[pivotIndex], p1, p2);
 
-	auto f1 = [&]() { parallel_quicksort(A, B, lsum1, lsum2, flag1, flag2, ps1, ps2, p1, a); };
-	auto f2 = [&]() { parallel_quicksort(A + p1 + p2, B + p1 + p2, lsum1 + p1 + p2, lsum2 + p1 + p2, flag1 + p1 + p2, flag2 + p1 + p2, ps1 + p1 + p2, ps2 + p1 + p2, n - p1 - p2, a);};
+	auto f1 = [&]() { parallel_quicksort(A, B, randA, lsum1, lsum2, flag1, flag2, ps1, ps2, p1, a); };
+	auto f2 = [&]() { parallel_quicksort(A + p1 + p2, B + p1 + p2, randA + p1 + p2, lsum1 + p1 + p2, lsum2 + p1 + p2, flag1 + p1 + p2, flag2 + p1 + p2, ps1 + p1 + p2, ps2 + p1 + p2, n - p1 - p2, a);};
 
 	par_do(f1, f2);
 }
@@ -121,6 +127,8 @@ void parallel_quicksort(T *A, T *B, T *lsum1, T *lsum2, T *flag1, T * flag2, T *
 template <class T>
 void quicksort(T *A, size_t n) {
 	T *B = (T*)malloc(n * sizeof(T));
+
+	T *randA = (T*)malloc(n * sizeof(T));
 
 	T *lsum1 = (T*)malloc(n * sizeof(T));
 	T *lsum2 = (T*)malloc(n * sizeof(T));
@@ -141,10 +149,11 @@ void quicksort(T *A, size_t n) {
 
 	pivotIndex = hashf(rand())%n;
 
-	parallel_quicksort(A, B, lsum1, lsum2, flag1, flag2, ps1, ps2, n, uint64_t(pivotIndex));
-	std::cout << "Sorted" << std::endl;
+	parallel_quicksort(A, B, randA, lsum1, lsum2, flag1, flag2, ps1, ps2, n, uint64_t(pivotIndex));
+	//std::cout << "Sorted" << std::endl;
 
 	free(B);
+	free(randA);
 	free(lsum1);
 	free(lsum2);
 	free(flag1);
