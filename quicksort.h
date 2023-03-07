@@ -89,15 +89,21 @@ void filter(T *A, T *B, T *lsum1, T *lsum2, T *flag1, T *flag2, T *ps1, T *ps2, 
 		else if(f2(A[i]))
 			B[ps1[n-1] + ps3 + ps2[i] - 1] = A[i];
 	});
-	parallel_for(ps1[n-1], ps1[n-1] + ps3, [&](size_t i){
-		B[i] = a;
-	});
 
-	parallel_for(0, n, [&](size_t i){
-		//if(i >= (size_t)(ps1[n-1]) && i < (size_t)(ps1[n-1] + ps3))
-			//B[i] = a;
+
+	parallel_for(0, ps1[n-1], [&](size_t i){
 		A[i] = B[i];
 	});
+
+	parallel_for(ps1[n-1], ps1[n-1] + ps3, [&](size_t i){
+		B[i] = a;
+		A[i] = a;
+	});
+
+	parallel_for(ps1[n-1] + ps3, n, [&](size_t i){
+		A[i] = B[i];
+	});
+
 	p1 = (size_t)ps1[n-1], p2 = ps3;
 }
 
@@ -110,13 +116,13 @@ void parallel_quicksort(T *A, T *B, T *randA, T *lsum1, T *lsum2, T *flag1, T * 
 	}
 
 	for(int i = 0; i < 50; i++)
-		randA[i] = hashf(a++)%n;
+		randA[i] = A[hashf(a++)%n];
 
 	std::sort(randA, randA + 50);
-	size_t pivotIndex = randA[25];
+	T pivot = randA[25];
 
 	//size_t pivotIndex = size_t(hashf(a++)%n);
-	filter(B, A, lsum1, lsum2, flag1, flag2, ps1, ps2, n, B[pivotIndex], p1, p2);
+	filter(A, B, lsum1, lsum2, flag1, flag2, ps1, ps2, n, pivot, p1, p2);
 
 	auto f1 = [&]() { parallel_quicksort(A, B, randA, lsum1, lsum2, flag1, flag2, ps1, ps2, p1, a); };
 	auto f2 = [&]() { parallel_quicksort(A + p1 + p2, B + p1 + p2, randA + p1 + p2, lsum1 + p1 + p2, lsum2 + p1 + p2, flag1 + p1 + p2, flag2 + p1 + p2, ps1 + p1 + p2, ps2 + p1 + p2, n - p1 - p2, a);};
