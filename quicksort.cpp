@@ -38,10 +38,54 @@ int main(int argc, char* argv[]) {
   Type* B = (Type*)malloc(n * sizeof(Type));
 
   double total_time = 0;
+  for(int xyz = 0, abc = 0; xyz< 5; xyz++){
   for (int i = 0; i <= num_rounds; i++) {
     // Generate random arrays
-    parallel_for(0, n,
-                 [&](size_t j) { A[j] = B[j] = hash64(j * random_seed); });
+    if(xyz == 0){
+    	parallel_for(0, n, [&](size_t j) {
+		A[j] = B[j] = hash64(j * random_seed);
+	});
+	if((abc++) == 0)
+		std::cout << "All distinct, uniformly random: " << std::endl;
+    }
+    if(xyz == 1){
+    	parallel_for(0, n, [&](size_t j) {
+		A[j] = B[j] = (hash64(j * random_seed)%(n/10));
+	});
+	if((abc++) == 4)
+		std::cout << "Light duplicates, uniformly random: " << std::endl;
+    }
+    if(xyz == 2){
+	parallel_for(0, n, [&](size_t j) {
+		if(j < n/4)
+			A[j] = B[j] = (hash64(j * random_seed)%(n/10));
+		else if(j < (2*(n/4)))
+			A[j] = B[j] = (hash64(j * random_seed)%(n/5));
+		else
+			A[j] = B[j] = (hash64(j * random_seed)%(n/2));
+	});
+	if((abc++) == 8)
+		std::cout << "Light duplicates, skewed distribution: " << std::endl;
+    }
+    if(xyz == 3){
+    	parallel_for(0, n, [&](size_t j) {
+		A[j] = B[j] = (hash64(j * random_seed)%10000);
+	});
+	if((abc++) == 12)
+		std::cout << "Heavy duplicates, uniformly random: " << std::endl;
+    }
+    if(xyz == 4){
+    	parallel_for(0, n, [&](size_t j) {
+		if(j < (n/4))
+			A[j] = B[j] = ((j * random_seed)%10000);
+		else if(j < (2*(n/4)))
+			A[j] = B[j] = (hash64(j * random_seed)%(n/90000));
+		else
+			A[j] = B[j] = (hash64(j * random_seed)%(1000));
+	});
+	if((abc++) == 16)
+		std::cout << "Heavy duplicates, skewed distribution: " << std::endl;
+    }
 
     parlay::timer t;
     quicksort(A, n);
@@ -64,6 +108,8 @@ int main(int argc, char* argv[]) {
     }
   }
   std::cout << "Average running time: " << total_time / num_rounds << std::endl;
+  total_time = 0;
+  }
 
   free(A);
   return 0;
