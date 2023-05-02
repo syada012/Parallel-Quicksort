@@ -1,4 +1,4 @@
-# homework0-quicksort  
+# Parallel-Quicksort  
 
 ## Compiling the code  
 A Makefile is given in the directory, simply use ``make`` to compile the code. If you're compiling the code on a M-series Mac, add the ``MXMAC=1`` option:  
@@ -22,7 +22,7 @@ uniform generator: https://cplusplus.com/reference/random/uniform_int_distributi
 exponential distribution: https://cplusplus.com/reference/random/exponential_distribution/  
 Zipfian distribution: https://en.wikipedia.org/wiki/Zipf%27s_law  
 
-## Optimization hints  
+## Optimizations  
 + Coarsening.  
 + Use ``std::sort`` for your base case. It's already well-optimized.  
 + Pre-allocate memory. Memory allocation can not be done in parallel.  
