@@ -13,10 +13,6 @@ numactl -i all ./quicksort [num_elements] [num_rounds] [random_seed]
 If not specified, the default values are ``num_elements=100000000``, ``num_rounds=3`` and ``random_seed=1``.  
 ``numactl`` can help distribute memory pages evenly on multiple sockets. More information can be found in [Linux man page](https://linux.die.net/man/8/numactl).  
 
-## Getting started  
-Please implement your parallel quicksort in the file ``quicksort.h``. All other files will be replaced in our testing.  
-For simplicity, you can implement distribution generators in ``quicksort.cpp``, but we will use our own generator when testing for fair comparison.  
-
 ## About generators  
 uniform generator: https://cplusplus.com/reference/random/uniform_int_distribution/  
 exponential distribution: https://cplusplus.com/reference/random/exponential_distribution/  
